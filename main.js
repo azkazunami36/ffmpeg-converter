@@ -13,15 +13,13 @@ const questions = text => {
 };
 const time = (sec) => {
     let output = "";
-    let hour = (sec / 60 / 60).toFixed();
-    for (let i = 0; hour > 59; i++) hour -= 60;
-    let minute = (sec / 60).toFixed();
-    for (let i = 0; minute > 59; i++) minute -= 60;
-    let second = sec.toFixed();
-    for (let i = 0; second > 59; i++) second -= 60;
+    let minute = 0;
+    let hour = 0;
+    for (minute; sec > 59; minute++) sec -= 60;
+    for (hour; minute > 59; hour++) minute -= 60;
     if (hour != 0) output += hour + "時間";
     if (minute != 0) output += minute + "分";
-    if (second != 0) output += second + "秒";
+    output += (sec).toFixed() + "秒";
     return output;
 };
 const mb = (byte) => { return (byte / 1024 / 1024).toFixed(1); };
@@ -98,7 +96,7 @@ const start = async () => {
     req.on("error", err => console.log());
     req.end();
 };
-const presetselect = async data => {
+const presetselect = async datas => {
     const req = http.request("http://localhost", {
         port: 3000,
         method: "post",
@@ -117,7 +115,7 @@ const presetselect = async data => {
             let preset;
             const selectopt = Number(await questions("変換するプリセットを選択してください。> "));
             if (!selectopt || selectopt > (json.presets.length)) { console.error("入力された値が不明であったため、操作を中断します。"); process.exit() };
-            convert(data, json.presets[selectopt - 1].tags);
+            convert(datas, json.presets[selectopt - 1].tags);
         });
     });
     req.write(JSON.stringify(["youtube_downloader"]));
