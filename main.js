@@ -41,7 +41,7 @@ const start = async () => {
                 "[2] パスを指定してFFmpegで変換を始める (普通)\n" +
                 "[3] FFmpegのタグを自分で入力し、パスを指定して変換を始める (上級)\n" +
                 "[4] デフォルトのパスを変更する\n" +
-                "[5] プリセットを追加・削除する ※現在は使用出来ない機能です。"
+                "[5] プリセットを追加・削除する"
             );
             const selectcmd = Number(await questions("実行するプログラムを選択してください。> "));
             if (!selectcmd || selectcmd > 5) { console.error("入力された値が不明であったため、操作を中断します。"); process.exit() };
@@ -88,6 +88,25 @@ const start = async () => {
                     req.end();
                 }
                 case 5: {
+                    let tag = [];
+                    outs: while (true) {
+                        console.info("現在の入力済みタグ数は" + tag.length + "です。\n空欄で続行するとタグの入力が完了したことになります。");
+                        const input = await questions("タグを入力してください。> ");
+                        if (input == "") break outs;
+                        tag.push(input);
+                        continue;
+                    };
+                    const display = await questions("タグ名を説明ありで入力してください。 > ");
+                    json.presets.push({display: display, tags: tag});
+                    const req = http.request("http://localhost", {
+                        port: 3000,
+                        method: "post",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" }
+                    });
+                    req.write(JSON.stringify(["youtube_downloader", json]));
+                    req.on("error", err => console.log());
+                    req.end();
+                    console.info("タグの作成が完了しました。");
                 }
             };
         });
