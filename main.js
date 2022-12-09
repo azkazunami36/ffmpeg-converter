@@ -78,7 +78,8 @@ const start = async () => {
                     const in_location = await questions("変換元の動画パスを入力してください。> ");
                     if (in_location) json.in_location = in_location;
                     const out_location = await questions("変換先のパスを入力してください。 > ");
-                    if (out_location) json.out_location = out_location;const req = http.request("http://localhost", {
+                    if (out_location) json.out_location = out_location;
+                    const req = http.request("http://localhost", {
                         port: 3000,
                         method: "post",
                         headers: { "Content-Type": "text/plain;charset=utf-8" }
