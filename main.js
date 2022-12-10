@@ -86,6 +86,7 @@ const filelistget = folder_path => {
     return new Promise((resolve, reject) => {
         fs.readdir(folder_path, { withFileTypes: true }, (err, dirents) => {
             if (err) reject(err);
+            if (!dirents) syspend();
             const extensions = [];
             const filenamelist = [];
             for (let i = 0; i != dirents.length; i++) {
@@ -133,7 +134,7 @@ const syspend = () => { console.error("入力された値が不明であった�
 /**
  * エラーが発生した際に使用される。
  */
-error = e => console.log
+const error = e => console.log;
 /**
  * メイン
  */
