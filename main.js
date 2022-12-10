@@ -107,16 +107,27 @@ const start = async () => {
                         "拡張子は[" + ext + "]の" + video_extensions.length + "つとなっています。"
                     );
                     const in_location = await questions("変換元のパスを入力してください。> ");
-                    const {filelist, filenamelist} = await filelistget(in_location);
-                    console.log(filenamelist);
+                    const { extensions, filenamelist } = await filelistget(in_location);
                     const out_location = await questions("変換先のパスを入力してください。 > ");
                     const presets = await presetselect(json.presets);
-                    const premission = await questions("準備が整いました。変換を開始しますか？yで続行します。 > ");
+                    console.info(
+                        "準備が整いました。以下を確認してください。\n" +
+                        "変換元: " + in_location + "\n" +
+                        "変換先: " + out_location + "\n" +
+                        "変換元の動画本数: " + filenamelist.length + "本"
+                    );
+                    const premission = await questions("変換を開始しますか？yで続行します。 > ");
                     if (premission != "y") return;
-                    for (let i = 0; i != filelist; i++) {
-                        console.info(i + "度目の変換をしています...\nファイル名: " + filenamelist[i]);
-                        convert({ inloca: in_location + filelist[i], outloca: out_location, name: filenamelist[i] }, presets);
+                    for (let i = 0; i != filenamelist.length; i++) {
+                        let missing = "";
+                        if (i != 0) {
+                            missing = "\nただいま進行状況が表示されていないかもしれません...\n" +
+                                "申し訳ありませんが、しばらくお待ちください...";
+                        };
+                        console.info((i + 1) + "本目の動画を変換しています...\nファイル名: " + filenamelist[i] + missing);
+                        await convert({ inloca: in_location + filenamelist[i] + "." + extensions[i], outloca: out_location, name: filenamelist[i] }, presets);
                     };
+                    console.info("全ての動画、" + filenamelist.length + "本の変換が完了しました！");
                 }
             };
         });
@@ -125,42 +136,46 @@ const start = async () => {
     req.on("error", err => console.log());
     req.end();
 };
-const presetselect = presets => {
+const presetselect = async presets => {
     let list = "";
     for (let i = 0; i != presets.length; i++) {
         list += "[" + (i + 1) + "] " + presets[i].display + "\n";
     };
     console.info("コマンド一覧:\n" + list);
-    const selectopt = Number(questions("変換するプリセットを選択してください。> "));
+    const selectopt = Number(await questions("変換するプリセットを選択してください。> "));
     if (!selectopt || selectopt > (presets.length)) {
         console.error("入力された値が不明であったため、操作を中断します。");
         process.exit();
     };
     return presets[selectopt - 1].tags;
 };
-const convert = (data, preset) => {
+const convert = async (data, preset) => {
     const { inloca, outloca, name } = data;
     const prog = ffmpeg(inloca);
-    prog.addOptions(preset);
-    prog.save(outloca + name + ".mp4");
-    prog.on("start", async commandLine => { starttime = Date.now(); console.log("変換を開始します。" + commandLine); });
-    prog.on("progress", async progress => {
-        const downloadedSeconds = (Date.now() - starttime) / 1000;
-        let percent = time(downloadedSeconds / progress.percent - downloadedSeconds);
-        if (!progress.percent) percent = "利用不可";
-        readline.cursorTo(process.stdout, 0);
-        process.stdout.write(progress.frames + "フレーム処理しました。(" + progress.currentFps + " fps) " + time(downloadedSeconds) + "経過 推定残り時間: " + percent);
-        readline.moveCursor(process.stdout, 0, 0);
-    })
-    prog.on("end", () => {
-        console.info("動画の変換が完了しました。");
+    await new Promise((resolve) => {
+        const progress = async (progress) => {
+            const downloadedSeconds = (Date.now() - starttime) / 1000;
+            let percent = time(downloadedSeconds / progress.percent - downloadedSeconds);
+            if (!progress.percent) percent = "利用不可";
+            readline.cursorTo(process.stdout, 0);
+            process.stdout.write(progress.frames + "フレーム処理しました。(" + progress.currentFps + " fps) " + time(downloadedSeconds) + "経過 推定残り時間: " + percent);
+            readline.moveCursor(process.stdout, 0, 0);
+        };
+        prog.addOptions(preset);
+        prog.save(outloca + name + ".mp4");
+        prog.on("start", async commandLine => { starttime = Date.now(); console.info("変換を開始します。" + commandLine); });
+        prog.on("progress", progress)
+        prog.on("end", () => {
+            console.info("動画の変換が完了しました。");
+            resolve();
+        });
     });
 };
 const filelistget = folder_path => {
     return new Promise((resolve, reject) => {
         fs.readdir(folder_path, { withFileTypes: true }, (err, dirents) => {
             if (err) reject(err);
-            const filelist = [];
+            const extensions = [];
             const filenamelist = [];
             for (let i = 0; i != dirents.length; i++) {
                 const dirent = dirents[i];
@@ -170,13 +185,13 @@ const filelistget = folder_path => {
                     const extension = namedot[namedot.length - 1];
                     for (let i = 0; i != video_extensions.length; i++) {
                         if (video_extensions[i] == extension) {
-                            filelist.push(dirent.name);
                             filenamelist.push(dirent.name.slice(0, -(extension.length + 1)));
+                            extensions.push(extension);
                         };
                     };
                 };
             };
-            resolve({filelist: filelist, filenamelist: filenamelist});
+            resolve({ extensions: extensions, filenamelist: filenamelist });
         });
     });
 };
