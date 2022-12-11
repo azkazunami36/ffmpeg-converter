@@ -91,11 +91,12 @@ const filelistget = folder_path => {
             const filenamelist = [];
             for (let i = 0; i != dirents.length; i++) {
                 if (!dirents[i].isDirectory()) {
-                    const namedot = dirents[i].name.split(".");
+                    const name = dirents[i].name;
+                    const namedot = name.split(".");
                     const extension = namedot[namedot.length - 1];
                     for (let i = 0; i != video_extensions.length; i++) {
                         if (video_extensions[i] == extension) {
-                            filenamelist.push(dirents[i].name.slice(0, -(extension.length + 1)));
+                            filenamelist.push(name.slice(0, -(extension.length + 1)));
                             extensions.push(extension);
                         };
                     };
