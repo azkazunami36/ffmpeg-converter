@@ -5,7 +5,7 @@ const ffmpeg = require("fluent-ffmpeg");
 /**
  * 動画の自動検出の際、この中から対象にする拡張子を追加する。
  */
-const video_extensions = ["mp4", "mov", "mkv", "avi"];
+const video_extensions = ["mp4", "mov", "mkv", "avi", "m4v"];
 /**
  * ユーザーからの文字入力を受けつける。
  * @param {string} text 
@@ -95,13 +95,15 @@ const filelistget = folder_path => {
                     const namedot = name.split(".");
                     const extension = namedot[namedot.length - 1];
                     for (let i = 0; i != video_extensions.length; i++) {
-                        if (video_extensions[i] == extension) {
+                        const regexp = new RegExp(extension, "i");
+                        if (video_extensions[i].match(regexp)) {
                             filenamelist.push(name.slice(0, -(extension.length + 1)));
                             extensions.push(extension);
                         };
                     };
                 };
             };
+            console.log(filenamelist)
             resolve({ extensions: extensions, filenamelist: filenamelist });
         });
     });
