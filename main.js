@@ -57,6 +57,7 @@ const presetselect = async presets => {
  */
 const convert = async (data, preset) => {
     const { inloca, outloca, name } = data;
+    let starttime;
     const prog = ffmpeg(inloca);
     await new Promise(resolve => {
         const progress = async (progress) => {
@@ -64,6 +65,7 @@ const convert = async (data, preset) => {
             let percent = time(downloadedSeconds / progress.percent - downloadedSeconds);
             if (!progress.percent) percent = "利用不可";
             readline.cursorTo(process.stdout, 0);
+            readline.clearLine(process.stdout);
             process.stdout.write(progress.frames + "フレーム処理しました。(" + progress.currentFps + " fps) " + time(downloadedSeconds) + "経過 推定残り時間: " + percent);
             readline.moveCursor(process.stdout, 0, 0);
         };
@@ -72,7 +74,9 @@ const convert = async (data, preset) => {
         prog.on("start", async commandLine => { starttime = Date.now(); console.info("変換を開始します。" + commandLine); });
         prog.on("progress", progress);
         prog.on("end", () => {
-            console.info("動画の変換が完了しました。");
+            readline.clearLine(process.stdout);
+            readline.cursorTo(process.stdout, 0);
+            console.info("動画の変換が完了しました。処理時間:" + time((Date.now() - starttime) / 1000));
             resolve();
         });
     });
