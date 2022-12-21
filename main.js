@@ -3,6 +3,11 @@ const fs = require("fs");
 const http = require("http");
 const ffmpeg = require("fluent-ffmpeg");
 /**
+ * data-serverのプログラムを使っている場合はtrueを、使っていない場合はfalseを使用してください。  
+ * 初期値がtrueなので、各自書き換えをお願いします。
+ */
+const dataserver = false;
+/**
  * 動画の自動検出の際、この中から対象にする拡張子を追加する。
  */
 const video_extensions = ["mp4", "mov", "mkv", "avi", "m4v"];
@@ -204,10 +209,22 @@ const jsonload = () => {
               }
             ]
           }
-        if (fs.existsSync("data.json")) fs.writeFileSync("data.json", data);
+        if (!fs.existsSync("data.json")) fs.writeFileSync("data.json", JSON.stringify(data, false, "    "));
         return fs.readFileSync("data.json");
     }
 };
+const savejson = json => {
+    if (dataserver) {
+        const req = http.request("http://localhost", {
+            port: 3000,
+            method: "post",
+            headers: { "Content-Type": "text/plain;charset=utf-8" }
+        });
+        req.write(JSON.stringify(["youtube_downloader", json]));
+        req.on("error", error);
+        req.end();
+    } else fs.writeFileSync("data.json", JSON.stringify(json, false, "    "));
+}
 /** 
  * 入力内容が間違っていた場合に使用する。
  */
@@ -269,14 +286,8 @@ const error = e => console.log;
             const out_location = await questions("変換先のパスを入力してください。 > ");
             if (in_location) json.in_location = in_location;
             if (out_location) json.out_location = out_location;
-            const req = http.request("http://localhost", {
-                port: 3000,
-                method: "post",
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
-            req.write(JSON.stringify(["youtube_downloader", json]));
-            req.on("error", error);
-            req.end();
+            savejson(json);
+            break;
         }
         case 5: {
             let tag = [];
@@ -289,14 +300,7 @@ const error = e => console.log;
             };
             const display = await questions("タグ名を説明ありで入力してください。 > ");
             json.presets.push({ display: display, tags: tag });
-            const req = http.request("http://localhost", {
-                port: 3000,
-                method: "post",
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
-            req.write(JSON.stringify(["youtube_downloader", json]));
-            req.on("error", error);
-            req.end();
+            savejson(json);
             console.info("タグの作成が完了しました。");
         }
         case 6: {
