@@ -118,7 +118,7 @@ const filelistget = folder_path => {
  * @returns jsonを文字列として出力する。
  */
 const jsonload = () => {
-    return new Promise((resolve) => {
+    if (dataserver) return new Promise((resolve) => {
         const req = http.request("http://localhost", {
             port: 3000,
             method: "post",
@@ -132,7 +132,81 @@ const jsonload = () => {
         req.write(JSON.stringify(["youtube_downloader"]));
         req.on("error", error);
         req.end();
-    });
+    })
+    else {
+        const data = {
+            "in_location": "C:/Users/RAM.avi",
+            "out_location": "C:/Users/",
+            "presets": [
+              {
+                "display": "高速、サイズ大 (h264 + キーフレーム1 + 最速モード)",
+                "tags": [
+                  "-c:v libx264",
+                  "-c:a aac",
+                  "-tag:v avc1",
+                  "-pix_fmt yuv420p",
+                  "-preset ultrafast",
+                  "-tune fastdecode,zerolatency",
+                  "-movflags +faststart",
+                  "-crf 21",
+                  "-g 1"
+                ]
+              },
+              {
+                "display": "高速、サイズ小 (h264 + キーフレーム120 + 最速モード)",
+                "tags": [
+                  "-c:v libx264",
+                  "-c:a aac",
+                  "-tag:v avc1",
+                  "-pix_fmt yuv420p",
+                  "-preset ultrafast",
+                  "-movflags +faststart",
+                  "-crf 21",
+                  "-g 120"
+                ]
+              },
+              {
+                "display": "低速、サイズ中 (h264 + キーフレーム1 + 通常モード)",
+                "tags": [
+                  "-c:v libx264",
+                  "-c:a aac",
+                  "-tag:v avc1",
+                  "-pix_fmt yuv420p",
+                  "-tune fastdecode,zerolatency",
+                  "-movflags +faststart",
+                  "-crf 21",
+                  "-g 1"
+                ]
+              },
+              {
+                "display": "低速、サイズ極小 (h264 + キーフレーム120 + 通常モード)",
+                "tags": [
+                  "-c:v libx264",
+                  "-c:a aac",
+                  "-tag:v avc1",
+                  "-pix_fmt yuv420p",
+                  "-movflags +faststart",
+                  "-crf 21",
+                  "-g 120"
+                ]
+              },
+              {
+                "display": "超低速、サイズ最小 (h265 + キーフレーム120 + 通常モード)",
+                "tags": [
+                  "-c:v libx265",
+                  "-c:a aac",
+                  "-tag:v hvc1",
+                  "-pix_fmt yuv420p",
+                  "-movflags +faststart",
+                  "-crf 21",
+                  "-g 120"
+                ]
+              }
+            ]
+          }
+        if (fs.existsSync("data.json")) fs.writeFileSync("data.json", data);
+        return fs.readFileSync("data.json");
+    }
 };
 /** 
  * 入力内容が間違っていた場合に使用する。
