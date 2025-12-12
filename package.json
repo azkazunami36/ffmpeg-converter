@@ -1,6 +1,14 @@
 {
   "version": "2.0.0",
   "dependencies": {
-    "fluent-ffmpeg": "^2.1.2"
+    "fluent-ffmpeg": "^2.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "start": "npx ts-node main.ts"
+  },
+  "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.28"
   }
 }
